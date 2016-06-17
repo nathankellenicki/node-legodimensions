@@ -1,0 +1,14 @@
+{
+  "name": "retrodimensions",
+  "version": "1.0.0",
+  "description": "Retro Dimensions",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nathan Kunicki <me@nathankunicki.com>",
+  "license": "MIT",
+  "dependencies": {
+    "node-hid": "0.5.1"
+  }
+}
