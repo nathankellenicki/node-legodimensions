@@ -54,7 +54,7 @@ class ToyPad extends EventEmitter {
         if (minifigData[sig]) {
             return minifigData[sig];
         } else {
-            return `Unknown - ${sig}`;
+            return "Unknown";
         }
     }
 
@@ -76,7 +76,7 @@ class ToyPad extends EventEmitter {
         for (let i = 0; i < data.length; i++) {
             checksum += data[i];
         }
-        data.push(checksum & 0xFF);
+        data.push(checksum & 0xff);
         return data;
     }
 
@@ -121,19 +121,10 @@ class ToyPad extends EventEmitter {
             });
 
             this._device.on("error", (err) => {
-                this.emit(err);
+                this.emit("error");
             });
 
-            // Wake the Toy Pad
-            this._device.write([0x00,
-                0x55, 0x0f, 0xb0, 0x01,
-                0x28, 0x63, 0x29, 0x20,
-                0x4c, 0x45, 0x47, 0x4f,
-                0x20, 0x32, 0x30, 0x31,
-                0x34, 0xf7, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00]);
+            this._wake();
 
         } catch (err) {
             this.emit("error");
@@ -154,6 +145,19 @@ class ToyPad extends EventEmitter {
         this._requestId++;
         this._write([0x55, 0x08, 0xc2].concat(data));
     };
+
+
+    _wake () {
+        this._device.write([0x00,
+            0x55, 0x0f, 0xb0, 0x01,
+            0x28, 0x63, 0x29, 0x20,
+            0x4c, 0x45, 0x47, 0x4f,
+            0x20, 0x32, 0x30, 0x31,
+            0x34, 0xf7, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00]);
+    }
 
 
     _write (data) {
