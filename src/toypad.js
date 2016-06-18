@@ -103,11 +103,13 @@ class ToyPad extends EventEmitter {
                     this.emit("connect");
                 } else if (cmd == Command.ACTION) {
 
-                    let action = data[5];
+                    let action = data[5],
+                        sig = ToyPad._bufferToHexString(data.slice(7, 13));
 
                     let emitPayload = {
                         panel: data[2],
-                        sig: ToyPad._bufferToHexString(data.slice(7, 13))
+                        sig: sig,
+                        recognized: !!minifigData[sig]
                     };
 
                     if (action == Action.ADD) {
