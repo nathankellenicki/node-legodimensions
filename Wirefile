@@ -1,0 +1,28 @@
+{
+  "name": "Lego Dimensions",
+  "description": "Node.js and Wirething module for interacting with the Lego Dimensions ToyPad",
+  "author": "Nathan Kunicki <me@nathankunicki.com>",
+  "main": "./index.js",
+  "devices": [{
+    "name": "ToyPad",
+    "type": "toypad",
+    "outputs": [{
+      "name": "Add",
+      "event": "add",
+      "params": [{
+        "name": "Decoded Payload",
+        "param": "payload",
+        "type": "Object"
+      }]
+    },{
+      "name": "Remove",
+      "event": "remove",
+      "params": [{
+        "name": "Decoded Payload",
+        "param": "payload",
+        "type": "Object"
+      }]
+    }],
+    "inputs": []
+  }]
+}

@@ -1,5 +1,5 @@
-let EventEmitter = require("events").EventEmitter,
-    HID = require("node-hid");
+const EventEmitter = require("events").EventEmitter,
+      HID = require("node-hid");
 
 
 const minifigData = require("../data/minifigs.json");
@@ -35,6 +35,8 @@ class ToyPad extends EventEmitter {
 
     constructor () {
         super();
+        this.uuid = "1";
+        this.deviceType = "toypad";
         this._device = null;
         this._requestId = 0;
     }
@@ -123,7 +125,7 @@ class ToyPad extends EventEmitter {
             });
 
             this._device.on("error", (err) => {
-                this.emit("error");
+                this.emit("error", err);
             });
 
             this._wake();
