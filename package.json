@@ -1,7 +1,7 @@
 {
-  "name": "retrodimensions",
+  "name": "node-legodimensions",
   "version": "1.0.0",
-  "description": "Retro Dimensions",
+  "description": "Lego Dimensions",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,7 +9,7 @@
   "author": "Nathan Kunicki <me@nathankunicki.com>",
   "license": "MIT",
   "dependencies": {
-    "debug": "2.6.0",
-    "node-hid": "0.5.1"
+    "debug": "^2.6.0",
+    "node-hid": "^0.5.2"
   }
 }

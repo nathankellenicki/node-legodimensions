@@ -1,6 +1,5 @@
-let ToyPad = require("./src/toypad.js");
-
-let toyPad = new ToyPad();
+let ToyPad = require("./src/toypad.js"),
+    toyPad = new ToyPad();
 
 toyPad.on("connect", () => {
     console.log("Toy Pad connected");
