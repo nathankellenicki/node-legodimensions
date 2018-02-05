@@ -1,5 +1,6 @@
 const EventEmitter = require("events").EventEmitter,
-      HID = require("node-hid");
+      HID = require("node-hid"),
+      debug = require("debug")("LegoDimensions");
 
 
 const minifigData = require("../data/minifigs.json");
@@ -16,6 +17,12 @@ const Action = {
 };
 
 
+const Type = {
+    RESPONSE: 0x55,
+    EVENT: 0x56
+}
+
+
 const Command = {
     CONNECTED: 0x19,
     ACTION: 0x0b
@@ -30,15 +37,19 @@ const Panel = {
 };
 
 
+const Request = {
+    COLOR: 0xc0
+}
+
+
 class ToyPad extends EventEmitter {
 
 
     constructor () {
         super();
-        this.uuid = "1";
-        this.deviceType = "toypad";
         this._device = null;
         this._requestId = 0;
+        this._callbacks = {};
     }
 
 
@@ -56,7 +67,7 @@ class ToyPad extends EventEmitter {
         if (minifigData[sig]) {
             return minifigData[sig];
         } else {
-            return "Unknown";
+            return null;
         }
     }
 
@@ -84,7 +95,7 @@ class ToyPad extends EventEmitter {
 
 
     static _pad (data) {
-        while (data.length < 32) {
+        while (data.length < 31) {
             data.push(0x00);
         }
         return data;
@@ -99,11 +110,12 @@ class ToyPad extends EventEmitter {
 
             this._device.on("data", (data) => {
 
-                let cmd = data[1];
+                let type = data[0],
+                    cmd = data[1];
 
-                if (cmd == Command.CONNECTED) {
+                if (type === Type.RESPONSE && cmd == Command.CONNECTED) {
                     this.emit("connect");
-                } else if (cmd == Command.ACTION) {
+                } else if (type === Type.EVENT && cmd == Command.ACTION) {
 
                     let action = data[5],
                         sig = ToyPad._bufferToHexString(data.slice(7, 13));
@@ -120,6 +132,8 @@ class ToyPad extends EventEmitter {
                         this.emit("remove", emitPayload);
                     }
 
+                } else if (type === Type.RESPONSE) {
+                    //console.log(data);
                 }
 
             });
@@ -137,17 +151,16 @@ class ToyPad extends EventEmitter {
     }
 
 
-    setColor (panel, color, speed = 1) {
+    setColor (panel, color) {
         let data = [
             this._requestId & 0xff,
-            panel,
-            ((1 - speed) * 0xff) & 0xff,
-            0x01, (color >> 16) & 0xff,
+            panel & 0xff,
+            (color >> 16) & 0xff,
             (color >> 8) & 0xff,
             color & 0xff
         ];
         this._requestId++;
-        this._write([0x55, 0x08, 0xc2].concat(data));
+        this._write([0x55, (data.length + 1) & 0xff, Request.COLOR].concat(data));
     };
 
 
@@ -165,7 +178,7 @@ class ToyPad extends EventEmitter {
 
 
     _write (data) {
-        this._device.write([0x00].concat(ToyPad._pad(ToyPad._checksum(data))));
+        this._device.write(ToyPad._pad(ToyPad._checksum(data)));
     }
 
 

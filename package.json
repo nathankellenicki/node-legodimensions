@@ -1,7 +1,7 @@
 {
   "name": "node-legodimensions",
-  "version": "1.0.0",
-  "description": "Lego Dimensions",
+  "version": "1.0.1",
+  "description": "Lego Dimensions ToyPad library for Node.js",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,7 +9,7 @@
   "author": "Nathan Kunicki <me@nathankunicki.com>",
   "license": "MIT",
   "dependencies": {
-    "debug": "^2.6.0",
-    "node-hid": "^0.5.2"
+    "debug": "^3.1.0",
+    "node-hid": "^0.7.2"
   }
 }
