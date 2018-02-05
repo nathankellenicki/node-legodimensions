@@ -8,6 +8,13 @@ PanelStates[ToyPad.Panel.RIGHT] = 0;
 PanelStates[ToyPad.Panel.CENTER] = 0;
 
 
+const Colors = {
+    WYLDSTYLE: 0xff0000,
+    BATMAN: 0x00ff00,
+    GANDALF: 0x0000ff
+}
+
+
 toyPad.on("connect", () => {
     console.log("ToyPad connected");
 });
@@ -28,20 +35,16 @@ toyPad.on("add", (data) => {
         console.log(`Minifig added to panel ${data.panel} (Unknown signature - ${data.sig})`);
     }
 
-    switch (name) {
-        case "Wyldstyle":
-            PanelStates[data.panel] = PanelStates[data.panel] | 0xff0000;
-            break;
-        case "Batman":
-            PanelStates[data.panel] = PanelStates[data.panel] | 0x00ff00;
-            break;
-        case "Gandalf":
-            PanelStates[data.panel] = PanelStates[data.panel] | 0x0000ff;
-            break;
-    }
+    PanelStates[data.panel] = PanelStates[data.panel] | Colors[name.toUpperCase()];
 
-    //console.log(PanelStates[data.panel]);
     toyPad.setColor(data.panel, PanelStates[data.panel]);
+    toyPad.flash(data.panel, Colors[name.toUpperCase()], 4);
+
+    setTimeout(() => {
+        toyPad.getColor(data.panel, (blah) => {
+            console.log(blah);
+        });
+    }, 3000);
 
 });
 
@@ -55,19 +58,8 @@ toyPad.on("remove", (data) => {
         console.log(`Minifig removed from panel ${data.panel} (Unknown signature - ${data.sig})`);
     }
 
-    switch (name) {
-        case "Wyldstyle":
-            PanelStates[data.panel] = PanelStates[data.panel] ^ 0xff0000;
-            break;
-        case "Batman":
-            PanelStates[data.panel] = PanelStates[data.panel] ^ 0x00ff00;
-            break;
-        case "Gandalf":
-            PanelStates[data.panel] = PanelStates[data.panel] ^ 0x0000ff;
-            break;
-    }
+    PanelStates[data.panel] = PanelStates[data.panel] ^ Colors[name.toUpperCase()];
 
-    //console.log(PanelStates[data.panel]);
     toyPad.setColor(data.panel, PanelStates[data.panel]);
 
 });

@@ -38,7 +38,9 @@ const Panel = {
 
 
 const Request = {
-    COLOR: 0xc0
+    GET_COLOR: 0xc1,
+    SET_COLOR: 0xc0,
+    FLASH: 0xc3
 }
 
 
@@ -133,7 +135,7 @@ class ToyPad extends EventEmitter {
                     }
 
                 } else if (type === Type.RESPONSE) {
-                    //console.log(data);
+                    
                 }
 
             });
@@ -151,16 +153,41 @@ class ToyPad extends EventEmitter {
     }
 
 
-    setColor (panel, color) {
+    getColor (panel, callback) {
         let data = [
-            this._requestId & 0xff,
+            this._requestId++ & 0xff,
+            (panel - 1) & 0xff
+        ];
+        this._send([(data.length + 1) & 0xff, Request.GET_COLOR].concat(data), callback);
+    }
+
+
+    setColor (panel, color, callback) {
+        let data = [
+            this._requestId++ & 0xff,
             panel & 0xff,
             (color >> 16) & 0xff,
             (color >> 8) & 0xff,
             color & 0xff
         ];
-        this._requestId++;
-        this._write([0x55, (data.length + 1) & 0xff, Request.COLOR].concat(data));
+        this._send([(data.length + 1) & 0xff, Request.SET_COLOR].concat(data), callback);
+    };
+
+
+    flash (panel, color, count, options = {}, callback) {
+        options.offTicks = options.offTicks || 10;
+        options.onTicks = options.onTicks || 10;
+        let data = [
+            this._requestId++ & 0xff,
+            panel & 0xff,
+            options.offTicks & 0xff,
+            options.onTicks & 0xff,
+            count & 0xff,
+            (color >> 16) & 0xff,
+            (color >> 8) & 0xff,
+            color & 0xff
+        ];
+        this._send([(data.length + 1) & 0xff, Request.FLASH].concat(data), callback);
     };
 
 
@@ -177,8 +204,11 @@ class ToyPad extends EventEmitter {
     }
 
 
-    _write (data) {
-        this._device.write(ToyPad._pad(ToyPad._checksum(data)));
+    _send (data, callback) {
+        if (callback) {
+            this._callbacks[data[3]] = callback;
+        }
+        this._device.write(ToyPad._pad(ToyPad._checksum([Type.RESPONSE].concat(data))));
     }
 
 
