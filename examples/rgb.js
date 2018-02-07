@@ -36,15 +36,7 @@ toyPad.on("add", (data) => {
     }
 
     PanelStates[data.panel] = PanelStates[data.panel] | Colors[name.toUpperCase()];
-
-    toyPad.setColor(data.panel, PanelStates[data.panel]);
-    toyPad.flash(data.panel, Colors[name.toUpperCase()], 4);
-
-    setTimeout(() => {
-        toyPad.getColor(data.panel, (blah) => {
-            console.log(blah);
-        });
-    }, 3000);
+    toyPad.fade(data.panel, 20, 1, PanelStates[data.panel]);
 
 });
 
@@ -59,8 +51,7 @@ toyPad.on("remove", (data) => {
     }
 
     PanelStates[data.panel] = PanelStates[data.panel] ^ Colors[name.toUpperCase()];
-
-    toyPad.setColor(data.panel, PanelStates[data.panel]);
+    toyPad.fade(data.panel, 15, 1, PanelStates[data.panel]);
 
 });
 

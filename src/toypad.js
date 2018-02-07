@@ -1,10 +1,10 @@
-const EventEmitter = require("events").EventEmitter,
+const {EventEmitter} = require("events"),
       HID = require("node-hid"),
       debug = require("debug")("LegoDimensions");
 
 
 const minifigData = require("../data/minifigs.json");
-let Minifig = {};
+const Minifig = {};
 
 Object.keys(minifigData).forEach((sig) => {
     Minifig[minifigData[sig].toUpperCase().replace(/\W+/g, "_")] = sig;
@@ -39,8 +39,30 @@ const Panel = {
 
 const Request = {
     GET_COLOR: 0xc1,
+    FADE: 0xc2,
     SET_COLOR: 0xc0,
     FLASH: 0xc3
+}
+
+
+class Callback {
+
+    constructor (type, callback) {
+        this.type = type;
+        this.callback = callback;
+    }
+
+}
+
+
+class EmitPayload {
+
+    constructor (panel, sig, recognised) {
+        this.panel = panel;
+        this.sig = sig;
+        this.recognised = recognised;
+    }
+
 }
 
 
@@ -112,21 +134,15 @@ class ToyPad extends EventEmitter {
 
             this._device.on("data", (data) => {
 
-                let type = data[0],
+                const type = data[0],
                     cmd = data[1];
 
-                if (type === Type.RESPONSE && cmd == Command.CONNECTED) {
-                    this.emit("connect");
-                } else if (type === Type.EVENT && cmd == Command.ACTION) {
+                if (type === Type.EVENT && cmd == Command.ACTION) {
 
-                    let action = data[5],
+                    const action = data[5],
                         sig = ToyPad._bufferToHexString(data.slice(7, 13));
 
-                    let emitPayload = {
-                        panel: data[2],
-                        sig: sig,
-                        recognized: !!minifigData[sig]
-                    };
+                    const emitPayload = new EmitPayload(data[2], sig, !!minifigData[sig]);
 
                     if (action == Action.ADD) {
                         this.emit("add", emitPayload);
@@ -135,7 +151,18 @@ class ToyPad extends EventEmitter {
                     }
 
                 } else if (type === Type.RESPONSE) {
-                    
+
+                    if (cmd == Command.CONNECTED) {
+                        this.emit("connect");
+                        return;
+                    }
+
+                    const length = data[1],
+                        requestId = data[2],
+                        payload = data.slice(3, 2 + length);
+
+                    this._processCallback(requestId, payload);
+
                 }
 
             });
@@ -154,31 +181,36 @@ class ToyPad extends EventEmitter {
 
 
     getColor (panel, callback) {
-        let data = [
-            this._requestId++ & 0xff,
+        const params = [
             (panel - 1) & 0xff
         ];
-        this._send([(data.length + 1) & 0xff, Request.GET_COLOR].concat(data), callback);
+        this._send(Request.GET_COLOR, params, callback);
+    }
+
+
+    _getColorResponse (callback, data) {
+        let color = data[2];
+        color += data[1] << 8;
+        color += data[0] << 16;
+        callback(null, color);
     }
 
 
     setColor (panel, color, callback) {
-        let data = [
-            this._requestId++ & 0xff,
+        const params = [
             panel & 0xff,
             (color >> 16) & 0xff,
             (color >> 8) & 0xff,
             color & 0xff
         ];
-        this._send([(data.length + 1) & 0xff, Request.SET_COLOR].concat(data), callback);
+        this._send(Request.SET_COLOR, params, callback);
     };
 
 
     flash (panel, color, count, options = {}, callback) {
         options.offTicks = options.offTicks || 10;
         options.onTicks = options.onTicks || 10;
-        let data = [
-            this._requestId++ & 0xff,
+        const params = [
             panel & 0xff,
             options.offTicks & 0xff,
             options.onTicks & 0xff,
@@ -187,8 +219,21 @@ class ToyPad extends EventEmitter {
             (color >> 8) & 0xff,
             color & 0xff
         ];
-        this._send([(data.length + 1) & 0xff, Request.FLASH].concat(data), callback);
+        this._send(Request.FLASH, params, callback);
     };
+
+
+    fade (panel, speed, cycles, color, callback) {
+        const params = [
+            panel & 0xff,
+            speed & 0xff,
+            cycles & 0xff,
+            (color >> 16) & 0xff,
+            (color >> 8) & 0xff,
+            color & 0xff
+        ];
+        this._send(Request.FADE, params, callback);
+    }
 
 
     _wake () {
@@ -204,11 +249,28 @@ class ToyPad extends EventEmitter {
     }
 
 
-    _send (data, callback) {
+    _processCallback (requestId, payload) {
+        const callback = this._callbacks[requestId];
         if (callback) {
-            this._callbacks[data[3]] = callback;
+            delete this._callbacks[requestId];
+            switch (callback.type) {
+                case Request.GET_COLOR:
+                    this._getColorResponse(callback.callback, payload);
+                    break;
+                default:
+                    callback.callback(null);
+                    break;
+            }
         }
-        this._device.write(ToyPad._pad(ToyPad._checksum([Type.RESPONSE].concat(data))));
+    }
+
+
+    _send (type, params, callback) {
+        const requestId = (++this._requestId) & 0xff;
+        if (callback) {
+            this._callbacks[requestId] = new Callback(type, callback);
+        }
+        this._device.write(ToyPad._pad(ToyPad._checksum([Type.RESPONSE, (params.length + 2) & 0xff, type, requestId].concat(params))));
     }
 
 
