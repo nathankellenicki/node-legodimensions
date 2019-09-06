@@ -1,14 +1,6 @@
-const {EventEmitter} = require("events"),
+const { EventEmitter } = require("events"),
       HID = require("node-hid"),
       debug = require("debug")("LegoDimensions");
-
-
-const minifigData = require("../data/minifigs.json");
-const Minifig = {};
-
-Object.keys(minifigData).forEach((sig) => {
-    Minifig[minifigData[sig].toUpperCase().replace(/\W+/g, "_")] = sig;
-});
 
 
 const Action = {
@@ -57,10 +49,9 @@ class Callback {
 
 class EmitPayload {
 
-    constructor (panel, sig, recognised) {
+    constructor (panel, sig) {
         this.panel = panel;
         this.sig = sig;
-        this.recognised = recognised;
     }
 
 }
@@ -142,7 +133,7 @@ class ToyPad extends EventEmitter {
                     const action = data[5],
                         sig = ToyPad._bufferToHexString(data.slice(7, 13));
 
-                    const emitPayload = new EmitPayload(data[2], sig, !!minifigData[sig]);
+                    const emitPayload = new EmitPayload(data[2], sig);
 
                     if (action == Action.ADD) {
                         this.emit("add", emitPayload);

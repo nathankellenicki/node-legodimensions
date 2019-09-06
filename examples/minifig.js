@@ -13,28 +13,14 @@ toyPad.on("error", () => {
 
 
 toyPad.on("add", (data) => {
-    const name = ToyPad.minifigNameFromSignature(data.sig);
-    if (name) {
-        console.log(`Minifig added to panel ${data.panel} (${name})`);
-    } else {
-        console.log(`Minifig added to panel ${data.panel} (Unknown signature - ${data.sig})`);
-    }
-    if (data.panel == ToyPad.Panel.CENTER) {
-        toyPad.setColor(data.panel, 0xffff, 0.5);
-    }
+    console.log(`Minifig added to panel ${data.panel} (${data.sig})`);
+        toyPad.setColor(data.panel, 0xffff);
 });
 
 
 toyPad.on("remove", (data) => {
-    const name = ToyPad.minifigNameFromSignature(data.sig);
-    if (name) {
-        console.log(`Minifig removed from panel ${data.panel} (${name})`);
-    } else {
-        console.log(`Minifig removed from panel ${data.panel} (Unknown signature - ${data.sig})`);
-    }
-    if (data.panel == ToyPad.Panel.CENTER) {
-        toyPad.setColor(data.panel, 0, 0.9);
-    }
+    console.log(`Minifig removed from panel ${data.panel} (${data.sig})`);
+        toyPad.setColor(data.panel, 0x0);
 });
 
 

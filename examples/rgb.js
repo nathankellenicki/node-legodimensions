@@ -2,16 +2,17 @@ const ToyPad = require("../main.js");
     toyPad = new ToyPad();
 
 
-let PanelStates = {};
-PanelStates[ToyPad.Panel.LEFT] = 0;
-PanelStates[ToyPad.Panel.RIGHT] = 0;
-PanelStates[ToyPad.Panel.CENTER] = 0;
+let PanelStates = {
+    [ToyPad.Panel.LEFT]: 0x0,
+    [ToyPad.Panel.RIGHT]: 0x0,
+    [ToyPad.Panel.CENTER]: 0x0
+};
 
 
 const Colors = {
-    WYLDSTYLE: 0xff0000,
-    BATMAN: 0x00ff00,
-    GANDALF: 0x0000ff
+    '07 c9 52 99 40 81': 0xff0000, // Wyldstyle
+    'fc f3 8a 71 40 80': 0x00ff00, // Batman
+    '9f 1f 8a 71 40 80': 0x0000ff // Gandalf
 }
 
 
@@ -27,15 +28,8 @@ toyPad.on("error", () => {
 
 toyPad.on("add", (data) => {
 
-    const name = ToyPad.minifigNameFromSignature(data.sig);
-
-    if (name) {
-        console.log(`Minifig added to panel ${data.panel} (${name})`);
-    } else {
-        console.log(`Minifig added to panel ${data.panel} (Unknown signature - ${data.sig})`);
-    }
-
-    PanelStates[data.panel] = PanelStates[data.panel] | Colors[name.toUpperCase()];
+    console.log(`Minifig added to panel ${data.panel} (${data.sig})`);
+    PanelStates[data.panel] = PanelStates[data.panel] | Colors[data.sig];
     toyPad.fade(data.panel, 20, 1, PanelStates[data.panel]);
 
 });
@@ -43,14 +37,8 @@ toyPad.on("add", (data) => {
 
 toyPad.on("remove", (data) => {
 
-    const name = ToyPad.minifigNameFromSignature(data.sig);
-    if (name) {
-        console.log(`Minifig removed from panel ${data.panel} (${name})`);
-    } else {
-        console.log(`Minifig removed from panel ${data.panel} (Unknown signature - ${data.sig})`);
-    }
-
-    PanelStates[data.panel] = PanelStates[data.panel] ^ Colors[name.toUpperCase()];
+    console.log(`Minifig removed from panel ${data.panel} (${data.sig})`);
+    PanelStates[data.panel] = PanelStates[data.panel] ^ Colors[data.sig];
     toyPad.fade(data.panel, 15, 1, PanelStates[data.panel]);
 
 });
